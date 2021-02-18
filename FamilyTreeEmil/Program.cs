@@ -6,7 +6,7 @@ namespace FamilyTreeEmil
     {
         static void Main(string[] args)
         {
-            var db = new S();
+            var db = new Database();
             db.NewDatabase();
             
         }

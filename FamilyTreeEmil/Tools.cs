@@ -21,6 +21,20 @@ namespace FamilyTreeEmil
             Console.ResetColor();
         }
 
+        public static void GreenTextWl(string input)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(input);
+            Console.ResetColor();
+        }
+
+        public static void GreenTextW(string input)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write(input);
+            Console.ResetColor();
+        }
+
         public static void Exit()
         {
             Console.Write("Tack för att du använt databasen\n\n\n");

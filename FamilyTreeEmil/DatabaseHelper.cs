@@ -13,14 +13,12 @@ using System.Threading;
 
 namespace FamilyTreeEmil
 {
-    class SqlDatabase
+    class DatabaseHelper
     {
         public static string ConnectionString { get; set; } = @"Data Source = .\SQLExpress; Integrated Security = true; database = {0}";
         public static string DatabaseName { get; set; } = "FamilyTree";
-        public List<Person> personList = new List<Person>();
-
-
-        public static void ExecuteSql(string sql, params (string, string)[] parameters)
+      
+        private static void ExecuteSql(string sql, params (string, string)[] parameters)
         {
             Debug.WriteLine(sql);
             var connectionString = string.Format(ConnectionString, DatabaseName);
@@ -55,12 +53,12 @@ namespace FamilyTreeEmil
                 DatabaseName = "master";
                 ExecuteSql($"CREATE DATABASE {databaseName}");
                 DatabaseName = databaseName;
-                Console.WriteLine($"Databas med namn {databaseName} har skapats!");
+                Tools.GreenTextWl($"Databas med namn {databaseName} har skapats!");
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 DatabaseName = databaseName;
-                Console.WriteLine(e.Message);
+                Tools.RedTextWr($"En databas med namnet {databaseName} är redan skapad!");
             }
         }
 
@@ -69,13 +67,13 @@ namespace FamilyTreeEmil
             try
             {
                 ExecuteSql($"CREATE TABLE {tableName} ({columns})");
-                Console.WriteLine($"Tabell med namn {tableName} har skapats!\n");
+                Tools.GreenTextW($"Tabell med namn {tableName} har skapats!\n");
                 Console.Write("Tryck Enter för att fortsätta: ");
                 Console.ReadKey();
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Console.WriteLine(e.Message);
+                Tools.RedTextWr($"En tabell med namnet {tableName} är redan skapad!");
                 Console.Write("\nTryck Enter för att fortsätta med den existerande databasen: ");
                 Console.ReadKey();
             }
@@ -120,7 +118,7 @@ namespace FamilyTreeEmil
             return persons;
         }
 
-        public DataTable GetDataTable(string sql, params (string, string)[] parameters)
+        private DataTable GetDataTable(string sql, params (string, string)[] parameters)
         {
             var dt = new DataTable();
             var connectionString = string.Format(ConnectionString, DatabaseName);
@@ -157,7 +155,7 @@ namespace FamilyTreeEmil
             return null;
         }
 
-        public Person GetPerson(DataRow row)
+        private Person GetPerson(DataRow row)
         {
             var person = new Person()
             {
@@ -300,13 +298,13 @@ namespace FamilyTreeEmil
             var choice = Console.ReadLine();
             if (choice.ToLower() == "j" || choice.ToLower() == "ja")
             {
-                var db = new SqlDatabase();
+                var db = new Database();
                 return db.AddPerson();
             }
             return null;
         }
 
-        public void DisplayPersons(List<Person> persons)
+        public static void DisplayPersons(List<Person> persons)
         {
             var ctr = 1;
             foreach (var person in persons)
@@ -325,7 +323,7 @@ namespace FamilyTreeEmil
             Console.WriteLine("0. Ingen av ovanstående");
         }
 
-        public int ChoosePerson(int count)
+        private int ChoosePerson(int count)
         {
             while (true)
             {

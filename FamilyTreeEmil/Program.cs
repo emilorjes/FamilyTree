@@ -6,10 +6,8 @@ namespace FamilyTreeEmil
     {
         static void Main(string[] args)
         {
-            var db = new SqlDatabase();
-            var person = new Person();
-
-            db.NewDatabase(person);
+            var db = new S();
+            db.NewDatabase();
             
         }
     }

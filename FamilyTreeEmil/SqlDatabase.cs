@@ -15,13 +15,12 @@ namespace FamilyTreeEmil
 {
     class SqlDatabase
     {
-        public string ConnectionString { get; set; } = @"Data Source = .\SQLExpress; Integrated Security = true; database = {0}";
-        public string DatabaseName { get; set; } = "FamilyTree";
+        public static string ConnectionString { get; set; } = @"Data Source = .\SQLExpress; Integrated Security = true; database = {0}";
+        public static string DatabaseName { get; set; } = "FamilyTree";
         public List<Person> personList = new List<Person>();
 
 
-        //============================================================================================================================================================================================
-        private void ExecuteSql(string sql, params (string, string)[] parameters)
+        public static void ExecuteSql(string sql, params (string, string)[] parameters)
         {
             Debug.WriteLine(sql);
             var connectionString = string.Format(ConnectionString, DatabaseName);
@@ -48,55 +47,8 @@ namespace FamilyTreeEmil
             }
         }
 
-        //============================================================================================================================================================================================
-        public void NewDatabase(Person person)
-        {
-            CreateDatabase("FamilyTree");
-            CreateTable($"Family",
-                    "id int PRIMARY KEY IDENTITY (1,1) NOT NULL, " +
-                    "first_name nvarchar(50) NOT NULL, " +
-                    "last_name nvarchar(50) NOT NULL, " +
-                    "date_of_birth date NULL, " +
-                    "date_of_death date NULL, " +
-                    "mother_id int NULL, " +
-                    "father_id int NULL");
-            Menu(person);
-        }
 
-        //============================================================================================================================================================================================
-        private void Menu(Person person)
-        {
-            do
-            {
-                Console.Clear();
-                Console.WriteLine($"Välkommen till databasen {DatabaseName}! \n");
-                Console.WriteLine("Vad vill du göra?\n");
-                Console.WriteLine("1. Sök efter personer (ändra, ta bort mm)");
-                Console.WriteLine("2. Lägg till person");
-                Console.WriteLine("3. Exit program");
-                Console.Write("\nMenyval: ");
-                var choice = Console.ReadLine();
-                MenuHandling(choice, 3);
-
-                switch (choice)
-                {
-                    case "1":
-                        SearchPersons();
-                        break;
-                    case "2":
-                        AddPerson();
-                        break;
-                    case "3":
-                        Exit();
-                        break;
-                   
-                }
-                Console.ReadLine();
-            } while (true);
-        }
-
-        //============================================================================================================================================================================================
-        private void CreateDatabase(string databaseName)
+        public static void CreateDatabase(string databaseName)
         {
             try
             {
@@ -112,8 +64,7 @@ namespace FamilyTreeEmil
             }
         }
 
-        //============================================================================================================================================================================================
-        private void CreateTable(string tableName, string columns)
+        public static void CreateTable(string tableName, string columns)
         {
             try
             {
@@ -130,34 +81,6 @@ namespace FamilyTreeEmil
             }
         }
 
-        //============================================================================================================================================================================================
-        private Person AddPerson()
-        {
-            Console.WriteLine();
-            var person = new Person();
-            Console.Write("Förnamn: ");
-            person.FirstName = Console.ReadLine();
-            Console.Write("Efternamn: ");
-            person.LastName = Console.ReadLine();
-            Console.Write("Födelsedatum (yyyy-mm-dd): ");
-            try
-            {
-                person.DateOfBirth = Convert.ToDateTime(Console.ReadLine());
-            }
-            catch (Exception e)
-            {
-
-                Console.WriteLine(e.Message);
-            }
-           
-            var db = new SqlDatabase();
-            db.Insert(person);
-            person.Id = db.GetLastAddedId();
-            Console.WriteLine($"\n{person.FirstName} {person.LastName} lades till i databasen {DatabaseName}");
-            return person;
-        }
-
-        //============================================================================================================================================================================================
         public void Insert(Person person)
         {
             var sql = "INSERT Family (first_name, last_name, date_of_birth) " +
@@ -169,106 +92,9 @@ namespace FamilyTreeEmil
                 ("@dob", person.DateOfBirth.Value.ToShortDateString())
             };
             ExecuteSql(sql, parameters);
-
-
-
-
         }
 
-        //============================================================================================================================================================================================
-        private static void MenuHandling(string menuChoice, int numberOfMenuChoices)
-        {
-            if (!int.TryParse(menuChoice, out int menuNumber) || menuNumber < 1 || menuNumber > numberOfMenuChoices)
-            {
-                ErrorMessage();
-            }
-        }
 
-        //============================================================================================================================================================================================
-        private static void RedTextWr(string input)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(input);
-            Console.ResetColor();
-        }
-
-        //============================================================================================================================================================================================
-        private static void Exit()
-        {
-            Console.Write("Tack för att du använt databasen\n\n\n");
-            Environment.Exit(0);
-        }
-        //============================================================================================================================================================================================
-
-        private static void ErrorMessage()
-        {
-            RedTextWr("Fel inmatning, försök igen.....");
-            Console.ReadLine();
-        }
-
-        //============================================================================================================================================================================================
-        public void SearchPersons()
-        {
-            bool keepMenuGo = true;
-            while (keepMenuGo)
-            {
-                Console.Clear();
-                Console.WriteLine("Vad vill du söka på?\n ");
-                Console.WriteLine("1. Personer som börjar på en viss bokstav");
-                Console.WriteLine("2. Personer födda ett visst år");
-                Console.WriteLine("3. Backa till menyn");
-                Console.Write("\nVal: ");
-                var choice = Console.ReadLine();
-                Console.WriteLine();
-                string sql = null;
-                var db = new SqlDatabase();
-                var persons = new List<Person>();
-
-                MenuHandling(choice, 3);
-                switch (choice)
-                {
-                    case "1":
-                        Console.Write("Skriv in en bokstav: ");
-                        var letter = Console.ReadLine();
-                        sql = "WHERE first_name LIKE @letter";
-                        persons = db.SelectAll(sql, ("@letter", $"{letter}%"));
-                        break;
-                    case "2":
-                        Console.Write("Skriv in ett årtal: ");
-                        var year = Console.ReadLine();
-                        sql = "WHERE date_of_birth LIKE @year";
-                        persons = db.SelectAll(sql, ("@year", $"{year}%"));
-                        break;
-                    case "3":
-                        keepMenuGo = false;
-                        break;
-
-                }
-
-
-                Console.WriteLine();
-                if (persons.Count > 0)
-                {
-                    foreach (var person in persons)
-                    {
-                        ShowInfo(person);
-                    }
-                    Console.Write("Välj ett id: ");
-                    if (int.TryParse(Console.ReadLine(), out int option))
-                    {
-                        var person = persons.Where(p => p.Id == option).FirstOrDefault();
-                        SelectPerson(person);
-                    }
-                    else
-                    {
-                        ErrorMessage();
-                    }
-                }
-
-            }
-        }
-
-        //============================================================================================================================================================================================
         public List<Person> SelectAll(string filter = null, params (string, string)[] parameters)
         {
             var sql = "SELECT * FROM Family ";
@@ -294,8 +120,7 @@ namespace FamilyTreeEmil
             return persons;
         }
 
-        //============================================================================================================================================================================================
-        private DataTable GetDataTable(string sql, params (string, string)[] parameters)
+        public DataTable GetDataTable(string sql, params (string, string)[] parameters)
         {
             var dt = new DataTable();
             var connectionString = string.Format(ConnectionString, DatabaseName);
@@ -318,45 +143,6 @@ namespace FamilyTreeEmil
             return dt;
         }
 
-        //============================================================================================================================================================================================
-        private static void ShowInfo(Person person)
-        {
-            var db = new SqlDatabase();
-            Console.WriteLine($"Id: {person.Id}");
-            Console.WriteLine($"Namn: {person.FirstName} {person.LastName}");
-
-            Console.Write("Födelsedatum: ");
-            if (person.DateOfBirth.HasValue)
-            {
-                Console.Write(person.DateOfBirth.Value.ToShortDateString());
-            }
-            Console.WriteLine();
-
-            Console.Write("Dödsdatum: ");
-            if (person.DateOfDeath.HasValue)
-            {
-                Console.Write(person.DateOfDeath.Value.ToShortDateString());
-            }
-            Console.WriteLine();
-
-            Console.Write("Mamma: ");
-            if (person.MotherId.HasValue)
-            {
-                var mother = db.SearchById(person.MotherId.Value);
-                Console.Write(mother.FirstName + " " + mother.LastName);
-            }
-            Console.WriteLine();
-
-            Console.Write("Pappa: ");
-            if (person.FatherId.HasValue)
-            {
-                var father = db.SearchById(person.FatherId.Value);
-                Console.Write(father.FirstName + " " + father.LastName);
-            }
-            Console.WriteLine("\n");
-        }
-
-        //============================================================================================================================================================================================
         public Person SearchById(int? id)
         {
             if (id.HasValue)
@@ -371,8 +157,7 @@ namespace FamilyTreeEmil
             return null;
         }
 
-        //============================================================================================================================================================================================
-        private Person GetPerson(DataRow row)
+        public Person GetPerson(DataRow row)
         {
             var person = new Person()
             {
@@ -402,56 +187,6 @@ namespace FamilyTreeEmil
             }
 
             return person;
-        }
-
-        private void SelectPerson(Person person)
-        {
-            while (true)
-            {
-                Console.Clear();
-                Console.WriteLine("Vad vill du göra?");
-                Console.WriteLine("1. Uppdatera person");
-                Console.WriteLine("2. Visa släkt");
-                Console.WriteLine("3. Ta bort person");
-                Console.WriteLine("4. Backa");
-                Console.Write("\nMenyval: ");
-                var choice = Console.ReadLine();
-                MenuHandling(choice, 4);
-                switch (choice)
-                {
-                    case "1":
-                        UpdatePerson(person);
-                        break;
-                    case "2":
-                        ShowRelatives(person);
-                        break;
-                    case "3":
-                        if (DeletePerson(person))
-                        {
-                            break;
-                        }
-                        break;
-                    case "4":
-                        Exit();
-                        break;
-                }  
-            }
-        }
-
-        public bool DeletePerson(Person person)
-        {
-            Console.WriteLine();
-            Console.WriteLine($"Vill du to bort {person.FirstName} {person.LastName}? ");
-            Console.Write($"j(ja) / n(nej): ");
-            var choice = Console.ReadLine();
-            if (choice.ToLower() == "j" || choice.ToLower() == "ja")
-            {
-                var db = new SqlDatabase();
-                db.Delete(person);
-                Console.WriteLine($"{person.FirstName} {person.LastName} togs bort!");
-                return true;
-            }
-            return false;
         }
 
         public void Delete(Person person)
@@ -520,67 +255,6 @@ namespace FamilyTreeEmil
             ExecuteSql(sql, parameters);
         }
 
-        public void UpdatePerson(Person person)
-        {
-            while (true)
-            {
-                Console.Clear();
-                ShowInfo(person);
-                Console.WriteLine("Vad vill du ändra?");
-                Console.WriteLine("1. Förnamn");
-                Console.WriteLine("2. Efternamn");
-                Console.WriteLine("3. Födelsedatum");
-                Console.WriteLine("4. Dödsdatum");
-                Console.WriteLine("5. Mamma");
-                Console.WriteLine("6. Pappa");
-                Console.WriteLine("7. Backa");
-                Console.Write("\nMenyval: ");
-                var choice = Console.ReadLine();
-                MenuHandling(choice, 7);
-              
-                    var db = new SqlDatabase();
-                    switch (choice)
-                    {
-                        case "1":
-                            Console.Write("Skriv in förnamn: ");
-                            person.FirstName = Console.ReadLine();
-                            break;
-                        case "2":
-                            Console.Write("Skriv in efternamn: ");
-                            person.LastName = Console.ReadLine();
-                            break;
-                        case "3":
-                            Console.Write("Skriv in födelsedatum: ");
-                            person.DateOfBirth = Convert.ToDateTime(Console.ReadLine());
-                            break;
-                        case "4":
-                            Console.Write("Skriv in dödsdatum: ");
-                            person.DateOfDeath = Convert.ToDateTime(Console.ReadLine());
-                            break;
-                        case "5":
-                            var mother = db.GetParent("mother");
-                            if (mother != null)
-                            {
-                                person.MotherId = mother.Id;
-                            }
-                            break;
-                        case "6":
-                            var father = db.GetParent("father");
-                            if (father != null)
-                            {
-                                person.FatherId = father.Id;
-                            }
-                            break;
-                        case "7":
-                            break;
-                        
-                    }
-                    db.Update(person);
-                
-            }
-
-        }
-
         public List<Person> GetParents(Person person)
         {
             var parents = new List<Person>();
@@ -632,7 +306,7 @@ namespace FamilyTreeEmil
             return null;
         }
 
-        private void DisplayPersons(List<Person> persons)
+        public void DisplayPersons(List<Person> persons)
         {
             var ctr = 1;
             foreach (var person in persons)
@@ -651,7 +325,7 @@ namespace FamilyTreeEmil
             Console.WriteLine("0. Ingen av ovanstående");
         }
 
-        private int ChoosePerson(int count)
+        public int ChoosePerson(int count)
         {
             while (true)
             {
@@ -668,62 +342,17 @@ namespace FamilyTreeEmil
                     }
                     else
                     {
-                        ErrorMessage();
+                        Tools.ErrorMessage();
                     }
                 }
                 else
                 {
-                    ErrorMessage();
+                    Tools.ErrorMessage();
                 }
             }
         }
 
-        private void ShowRelatives(Person person)
-        {
-            var db = new SqlDatabase();
-            var parents = db.GetParents(person);
-            if (parents.Count > 0)
-            {
-                Console.WriteLine("Föräldrar:");
-                foreach (var parent in parents)
-                {
-                    ShowInfo(parent);
-                }
-                Console.WriteLine();
-            }
 
-            var siblings = db.GetSiblings(person);
-            if (siblings.Count > 0)
-            {
-                Console.WriteLine("Syskon:");
-                foreach (var sibling in siblings)
-                {
-                    ShowInfo(sibling);
-                }
-                Console.WriteLine();
-            }
-
-            var relatives = parents;
-            relatives.AddRange(siblings);
-            if (relatives.Count > 0)
-            {
-                Console.Write("Välj ett id: ");
-                if (int.TryParse(Console.ReadLine(), out int option))
-                {
-                    var relative = relatives.Where(p => p.Id == option).FirstOrDefault();
-                    SelectPerson(relative);
-                }
-                else
-                {
-                    ErrorMessage();
-                }
-            }
-            else
-            {
-                Console.WriteLine($"{person.FirstName} {person.LastName} har ingen släkt.");
-                
-            }
-        }
 
         public List<Person> GetSiblings(Person person)
         {

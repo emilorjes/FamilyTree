@@ -6,6 +6,9 @@ namespace FamilyTreeEmil
 {
     class SimpsonsFamily
     {
+        /// <summary>
+        /// För in Simpsons karaktärer i Family tabellen.
+        /// </summary>
         public static void InsertSimpsons()
         {
             DatabaseHelper.ExecuteSql(

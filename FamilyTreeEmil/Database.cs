@@ -9,6 +9,9 @@ namespace FamilyTreeEmil
 {
     class Database
     {
+        /// <summary>
+        /// Innehåller metoder för att skapa databas / tabell, och meny.
+        /// </summary>
         public void NewDatabase()
         {
             DatabaseHelper.CreateDatabase("FamilyTree");
@@ -20,10 +23,13 @@ namespace FamilyTreeEmil
                     "date_of_death int NULL, " +
                     "mother_id int NULL, " +
                     "father_id int NULL");
-            Menu();
+            MainMenu();
         }
 
-        private void Menu()
+        /// <summary>
+        /// Huvudmeny som innehåller metoder för att söka, lägga till och lista personer i databasen.
+        /// </summary>
+        private void MainMenu()
         {
             do
             {
@@ -35,7 +41,7 @@ namespace FamilyTreeEmil
                 Console.WriteLine("3. Visa alla personer");
                 Console.WriteLine("4. Exit program");
                 Console.Write("\nMenyval: ");
-                
+
                 var choice = Console.ReadLine();
                 Tools.MenuHandling(choice, 3);
                 switch (choice)
@@ -57,6 +63,10 @@ namespace FamilyTreeEmil
             } while (true);
         }
 
+        /// <summary>
+        /// Tar in användar input och lägger till person i databasen.
+        /// </summary>
+        /// <returns></returns>
         public Person AddPerson()
         {
             var person = new Person();
@@ -72,23 +82,23 @@ namespace FamilyTreeEmil
 
                 if (person.FirstName == "" || person.LastName == "")
                 {
-                    Tools.RedTextWr("\nDu måste fylla i förnamn, efternamn!\n");
+                    Tools.RedTextWL("\nDu måste fylla i förnamn, efternamn!\n");
                 }
                 else
                 {
                     var db = new DatabaseHelper();
                     db.Insert(person);
                     person.Id = db.GetLastAddedId();
-                    Tools.GreenTextWl($"\n{person.FirstName} {person.LastName} lades till i databasen {DatabaseHelper.DatabaseName}");
+                    Tools.GreenTextWL($"\n{person.FirstName} {person.LastName} lades till i databasen {DatabaseHelper.DatabaseName}");
                     keepMenuGo = false;
                 }
-
             }
-
             return person;
-
         }
 
+        /// <summary>
+        /// Går att söka på personer genom deras första bokstav eller födelseår.
+        /// </summary>
         private void SearchPersons()
         {
             bool keepMenuGo = true;
@@ -124,9 +134,7 @@ namespace FamilyTreeEmil
                     case "3":
                         keepMenuGo = false;
                         break;
-
                 }
-
 
                 Console.WriteLine();
                 if (persons.Count > 0)
@@ -141,16 +149,17 @@ namespace FamilyTreeEmil
                         var person = persons.Where(p => p.Id == option).FirstOrDefault();
                         SelectPerson(person);
                     }
-
                 }
                 else
                 {
-                    Tools.RedTextWr("Det finns inga person som matchar din sökning!");
+                    Tools.RedTextWL("Det finns inga person som matchar din sökning!");
                 }
-
             }
         }
 
+        /// <summary>
+        /// Listar alla personerna i databasen.
+        /// </summary>
         public void ListAll()
         {
             var db = new DatabaseHelper();
@@ -171,16 +180,17 @@ namespace FamilyTreeEmil
                     var person = persons.Where(p => p.Id == option).FirstOrDefault();
                     SelectPerson(person);
                 }
-
             }
-
         }
 
-
+        /// <summary>
+        /// Visar information på personen.
+        /// </summary>
+        /// <param name="person"></param>
         private void ShowInfo(Person person)
         {
             var db = new DatabaseHelper();
-            Tools.GreenTextWl($"Id: {person.Id}");
+            Tools.GreenTextWL($"Id: {person.Id}");
             Console.WriteLine($"Namn: {person.FirstName} {person.LastName}");
 
             Console.Write("Födelsedatum: ");
@@ -214,6 +224,10 @@ namespace FamilyTreeEmil
             Console.WriteLine("\n");
         }
 
+        /// <summary>
+        /// Uppdatera, visa släkt eller ta bort person.
+        /// </summary>
+        /// <param name="person"></param>
         private void SelectPerson(Person person)
         {
             bool keepMenuGo = true;
@@ -227,6 +241,7 @@ namespace FamilyTreeEmil
                 Console.WriteLine("3. Ta bort person");
                 Console.WriteLine("4. Backa");
                 Console.Write("\nMenyval: ");
+
                 var choice = Console.ReadLine();
                 Console.WriteLine();
                 Tools.MenuHandling(choice, 4);
@@ -250,6 +265,11 @@ namespace FamilyTreeEmil
             }
         }
 
+        /// <summary>
+        /// Tar bort person från databasen.
+        /// </summary>
+        /// <param name="person"></param>
+        /// <returns></returns>
         private bool DeletePerson(Person person)
         {
             Console.WriteLine();
@@ -260,12 +280,16 @@ namespace FamilyTreeEmil
             {
                 var db = new DatabaseHelper();
                 db.Delete(person);
-                Tools.RedTextWr($"\n{person.FirstName} {person.LastName} togs bort!");
+                Tools.RedTextWL($"\n{person.FirstName} {person.LastName} togs bort!");
                 return true;
             }
             return false;
         }
 
+        /// <summary>
+        /// Uppdaterar personens information beroende på vad användaren skriver in.
+        /// </summary>
+        /// <param name="person"></param>
         private void UpdatePerson(Person person)
         {
             bool keepMenuGo = true;
@@ -321,21 +345,22 @@ namespace FamilyTreeEmil
                     case "7":
                         keepMenuGo = false;
                         break;
-
                 }
                 db.Update(person);
-
             }
-
         }
 
+        /// <summary>
+        /// Visar släkten till det person ID användaren valt.
+        /// </summary>
+        /// <param name="person"></param>
         private void ShowRelatives(Person person)
         {
             var db = new DatabaseHelper();
             var parents = db.GetParents(person);
             if (parents.Count > 0)
             {
-                Tools.BlueTextWr("Föräldrar:");
+                Tools.BlueTextWL("Föräldrar:");
                 foreach (var parent in parents)
                 {
                     ShowInfo(parent);
@@ -346,7 +371,7 @@ namespace FamilyTreeEmil
             var siblings = db.GetSiblings(person);
             if (siblings.Count > 0)
             {
-                Tools.BlueTextWr("Syskon:");
+                Tools.BlueTextWL("Syskon:");
                 foreach (var sibling in siblings)
                 {
                     ShowInfo(sibling);

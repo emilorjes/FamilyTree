@@ -18,6 +18,11 @@ namespace FamilyTreeEmil
         public static string ConnectionString { get; set; } = @"Data Source = .\SQLExpress; Integrated Security = true; database = {0}";
         public static string DatabaseName { get; set; } = "FamilyTree";
 
+        /// <summary>
+        /// En metod för att ta in SQL argument.
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="parameters"></param>
         public static void ExecuteSql(string sql, params (string, string)[] parameters)
         {
             Debug.WriteLine(sql);
@@ -45,7 +50,10 @@ namespace FamilyTreeEmil
             }
         }
 
-
+        /// <summary>
+        /// Skapar upp en databas om en databas med det namnet INTE redan finns.
+        /// </summary>
+        /// <param name="databaseName"></param>
         public static void CreateDatabase(string databaseName)
         {
             try
@@ -53,15 +61,20 @@ namespace FamilyTreeEmil
                 DatabaseName = "master";
                 ExecuteSql($"CREATE DATABASE {databaseName}");
                 DatabaseName = databaseName;
-                Tools.GreenTextWl($"Databas med namn {databaseName} har skapats!");
+                Tools.GreenTextWL($"Databas med namn {databaseName} har skapats!");
             }
             catch (Exception)
             {
                 DatabaseName = databaseName;
-                Tools.RedTextWr($"En databas med namnet {databaseName} är redan skapad!");
+                Tools.RedTextWL($"En databas med namnet {databaseName} är redan skapad!");
             }
         }
 
+        /// <summary>
+        /// Skapar upp en tabell om en tabell med det namnet INTE redan finns.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="columns"></param>
         public static void CreateTable(string tableName, string columns)
         {
             try
@@ -74,12 +87,16 @@ namespace FamilyTreeEmil
             }
             catch (Exception)
             {
-                Tools.RedTextWr($"En tabell med namnet {tableName} är redan skapad!");
+                Tools.RedTextWL($"En tabell med namnet {tableName} är redan skapad!");
                 Console.Write("\nTryck Enter för att fortsätta med den existerande databasen: ");
                 Console.ReadKey();
             }
         }
 
+        /// <summary>
+        /// SQL argument för att föra in person i tabellen.
+        /// </summary>
+        /// <param name="person"></param>
         public void Insert(Person person)
         {
             var sql = "INSERT Family (first_name, last_name, date_of_birth) " +
@@ -91,10 +108,14 @@ namespace FamilyTreeEmil
                 ("@dob", person.DateOfBirth.Value.ToString())
             };
             ExecuteSql(sql, parameters);
-
         }
 
-
+        /// <summary>
+        /// Väljer alla personer i tabellen, går att använda denna metod för att bygga på mer SQL argument.
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         public List<Person> SelectAll(string filter = null, params (string, string)[] parameters)
         {
             var sql = "SELECT * FROM Family ";
@@ -120,6 +141,12 @@ namespace FamilyTreeEmil
             return persons;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         private DataTable GetDataTable(string sql, params (string, string)[] parameters)
         {
             var dt = new DataTable();
@@ -143,6 +170,11 @@ namespace FamilyTreeEmil
             return dt;
         }
 
+        /// <summary>
+        ///  SQL argument för att söka efter person i tabellen med ett specifikt ID.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public Person SearchById(int? id)
         {
             if (id.HasValue)
@@ -157,7 +189,11 @@ namespace FamilyTreeEmil
             return null;
         }
 
-
+        /// <summary>
+        /// Hämtar person i tabellen.
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
         private Person GetPerson(DataRow row)
         {
             var person = new Person()
@@ -190,12 +226,20 @@ namespace FamilyTreeEmil
             return person;
         }
 
+        /// <summary>
+        /// SQL argument för att ta bort person.
+        /// </summary>
+        /// <param name="person"></param>
         public void Delete(Person person)
         {
             var sql = "DELETE FROM Family WHERE id = @id";
             ExecuteSql(sql, ("@id", person.Id.ToString()));
         }
 
+        /// <summary>
+        /// Uppdaterar specifika delar av personen i tabellen.
+        /// </summary>
+        /// <param name="person"></param>
         public void Update(Person person)
         {
             var sql = "UPDATE Family SET first_name = @fName, " +
@@ -256,6 +300,11 @@ namespace FamilyTreeEmil
             ExecuteSql(sql, parameters);
         }
 
+        /// <summary>
+        /// Hämtar personens föräldrar med hjälp av ID.
+        /// </summary>
+        /// <param name="person"></param>
+        /// <returns></returns>
         public List<Person> GetParents(Person person)
         {
             var parents = new List<Person>();
@@ -272,6 +321,11 @@ namespace FamilyTreeEmil
             return parents;
         }
 
+        /// <summary>
+        /// Kolla om föräldren till personen finns, om inte skapa upp en ny person.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public Person GetParent(string type)
         {
             Console.Write($"Skriv in namn på {type}: ");
@@ -307,6 +361,10 @@ namespace FamilyTreeEmil
             return null;
         }
 
+        /// <summary>
+        /// Visa en lista på personer som stämmer överens med användarens inmatning.
+        /// </summary>
+        /// <param name="persons"></param>
         public static void DisplayPersons(List<Person> persons)
         {
             var ctr = 1;
@@ -326,6 +384,11 @@ namespace FamilyTreeEmil
             Console.WriteLine("0. Ingen av ovanstående");
         }
 
+        /// <summary>
+        /// Välj person beroende på användarens inmatning.
+        /// </summary>
+        /// <param name="count"></param>
+        /// <returns></returns>
         private int ChoosePerson(int count)
         {
             while (true)
@@ -353,8 +416,11 @@ namespace FamilyTreeEmil
             }
         }
 
-
-
+        /// <summary>
+        /// SQL argument för att hämta information om personer med samma mamma ID och pappa ID.
+        /// </summary>
+        /// <param name="person"></param>
+        /// <returns></returns>
         public List<Person> GetSiblings(Person person)
         {
             var sql = "SELECT * FROM Family WHERE mother_id = @mId OR father_id = @fId";
@@ -371,6 +437,10 @@ namespace FamilyTreeEmil
             return siblings.Where(s => s.Id != person.Id).ToList();
         }
 
+        /// <summary>
+        /// Hämta senaste tillagda ID.
+        /// </summary>
+        /// <returns></returns>
         public int GetLastAddedId()
         {
             var sql = "SELECT id FROM Family";

@@ -9,10 +9,9 @@ namespace FamilyTreeEmil
         public int Id { get; set; } = 0;
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        public DateTime? DateOfBirth { get; set; } = null;
-        public DateTime? DateOfDeath { get; set; } = null;
+        public int? DateOfBirth { get; set; } = null;
+        public int? DateOfDeath { get; set; } = null;
         public int? MotherId { get; set; } = null;
         public int? FatherId { get; set; } = null;
-
     }
 }

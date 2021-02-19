@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 
 namespace FamilyTreeEmil
@@ -14,8 +16,8 @@ namespace FamilyTreeEmil
                     "id int PRIMARY KEY IDENTITY (1,1) NOT NULL, " +
                     "first_name nvarchar(50) NOT NULL, " +
                     "last_name nvarchar(50) NOT NULL, " +
-                    "date_of_birth date NULL, " +
-                    "date_of_death date NULL, " +
+                    "date_of_birth int NULL, " +
+                    "date_of_death int NULL, " +
                     "mother_id int NULL, " +
                     "father_id int NULL");
             Menu();
@@ -33,9 +35,9 @@ namespace FamilyTreeEmil
                 Console.WriteLine("3. Visa alla personer");
                 Console.WriteLine("4. Exit program");
                 Console.Write("\nMenyval: ");
+                
                 var choice = Console.ReadLine();
                 Tools.MenuHandling(choice, 3);
-
                 switch (choice)
                 {
                     case "1":
@@ -45,7 +47,7 @@ namespace FamilyTreeEmil
                         AddPerson();
                         break;
                     case "3":
-                     
+                        ListAll();
                         break;
                     case "4":
                         Tools.Exit();
@@ -57,28 +59,34 @@ namespace FamilyTreeEmil
 
         public Person AddPerson()
         {
-            Console.WriteLine();
             var person = new Person();
-            Console.Write("Förnamn: ");
-            person.FirstName = Console.ReadLine();
-            Console.Write("Efternamn: ");
-            person.LastName = Console.ReadLine();
-            Console.Write("Födelsedatum (yyyy-mm-dd): ");
-            try
+            bool keepMenuGo = true;
+            while (keepMenuGo)
             {
-                person.DateOfBirth = Convert.ToDateTime(Console.ReadLine());
-            }
-            catch (Exception e)
-            {
+                Console.Write("\nFörnamn: ");
+                person.FirstName = Console.ReadLine();
+                Console.Write("Efternamn: ");
+                person.LastName = Console.ReadLine();
+                Console.Write("Födelseår: ");
+                person.DateOfBirth = Convert.ToInt32(Console.ReadLine());
 
-                Console.WriteLine(e.Message);
+                if (person.FirstName == "" || person.LastName == "")
+                {
+                    Tools.RedTextWr("\nDu måste fylla i förnamn, efternamn!\n");
+                }
+                else
+                {
+                    var db = new DatabaseHelper();
+                    db.Insert(person);
+                    person.Id = db.GetLastAddedId();
+                    Tools.GreenTextWl($"\n{person.FirstName} {person.LastName} lades till i databasen {DatabaseHelper.DatabaseName}");
+                    keepMenuGo = false;
+                }
+
             }
 
-            var db = new DatabaseHelper();
-            db.Insert(person);
-            person.Id = db.GetLastAddedId();
-            Tools.GreenTextWl($"\n{person.FirstName} {person.LastName} lades till i databasen {DatabaseHelper.DatabaseName}");
             return person;
+
         }
 
         private void SearchPersons()
@@ -133,7 +141,7 @@ namespace FamilyTreeEmil
                         var person = persons.Where(p => p.Id == option).FirstOrDefault();
                         SelectPerson(person);
                     }
-                  
+
                 }
                 else
                 {
@@ -142,6 +150,32 @@ namespace FamilyTreeEmil
 
             }
         }
+
+        public void ListAll()
+        {
+            var db = new DatabaseHelper();
+            var persons = new List<Person>();
+
+            persons = db.SelectAll();
+
+            Console.WriteLine();
+            if (persons.Count > 0)
+            {
+                foreach (var person in persons)
+                {
+                    ShowInfo(person);
+                }
+                Tools.GreenTextW("Välj ett id: ");
+                if (int.TryParse(Console.ReadLine(), out int option))
+                {
+                    var person = persons.Where(p => p.Id == option).FirstOrDefault();
+                    SelectPerson(person);
+                }
+
+            }
+
+        }
+
 
         private void ShowInfo(Person person)
         {
@@ -152,14 +186,14 @@ namespace FamilyTreeEmil
             Console.Write("Födelsedatum: ");
             if (person.DateOfBirth.HasValue)
             {
-                Console.Write(person.DateOfBirth.Value.ToShortDateString());
+                Console.Write(person.DateOfBirth.Value);
             }
             Console.WriteLine();
 
             Console.Write("Dödsdatum: ");
             if (person.DateOfDeath.HasValue)
             {
-                Console.Write(person.DateOfDeath.Value.ToShortDateString());
+                Console.Write(person.DateOfDeath.Value);
             }
             Console.WriteLine();
 
@@ -194,6 +228,7 @@ namespace FamilyTreeEmil
                 Console.WriteLine("4. Backa");
                 Console.Write("\nMenyval: ");
                 var choice = Console.ReadLine();
+                Console.WriteLine();
                 Tools.MenuHandling(choice, 4);
                 switch (choice)
                 {
@@ -263,11 +298,11 @@ namespace FamilyTreeEmil
                         break;
                     case "3":
                         Console.Write("Skriv in födelsedatum: ");
-                        person.DateOfBirth = Convert.ToDateTime(Console.ReadLine());
+                        person.DateOfBirth = Convert.ToInt32(Console.ReadLine());
                         break;
                     case "4":
                         Console.Write("Skriv in dödsdatum: ");
-                        person.DateOfDeath = Convert.ToDateTime(Console.ReadLine());
+                        person.DateOfDeath = Convert.ToInt32(Console.ReadLine());
                         break;
                     case "5":
                         var mother = db.GetParent("Mamma");
@@ -300,7 +335,7 @@ namespace FamilyTreeEmil
             var parents = db.GetParents(person);
             if (parents.Count > 0)
             {
-                Console.WriteLine("Föräldrar:");
+                Tools.BlueTextWr("Föräldrar:");
                 foreach (var parent in parents)
                 {
                     ShowInfo(parent);
@@ -311,7 +346,7 @@ namespace FamilyTreeEmil
             var siblings = db.GetSiblings(person);
             if (siblings.Count > 0)
             {
-                Console.WriteLine("Syskon:");
+                Tools.BlueTextWr("Syskon:");
                 foreach (var sibling in siblings)
                 {
                     ShowInfo(sibling);

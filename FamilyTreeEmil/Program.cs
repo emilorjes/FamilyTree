@@ -8,7 +8,7 @@ namespace FamilyTreeEmil
         {
             var db = new Database();
             db.NewDatabase();
-            
+
         }
     }
 }

@@ -17,8 +17,8 @@ namespace FamilyTreeEmil
     {
         public static string ConnectionString { get; set; } = @"Data Source = .\SQLExpress; Integrated Security = true; database = {0}";
         public static string DatabaseName { get; set; } = "FamilyTree";
-      
-        private static void ExecuteSql(string sql, params (string, string)[] parameters)
+
+        public static void ExecuteSql(string sql, params (string, string)[] parameters)
         {
             Debug.WriteLine(sql);
             var connectionString = string.Format(ConnectionString, DatabaseName);
@@ -69,6 +69,7 @@ namespace FamilyTreeEmil
                 ExecuteSql($"CREATE TABLE {tableName} ({columns})");
                 Tools.GreenTextW($"Tabell med namn {tableName} har skapats!\n");
                 Console.Write("Tryck Enter för att fortsätta: ");
+                SimpsonsFamily.InsertSimpsons();
                 Console.ReadKey();
             }
             catch (Exception)
@@ -87,9 +88,10 @@ namespace FamilyTreeEmil
             {
                 ("@fName", person.FirstName),
                 ("@lName", person.LastName),
-                ("@dob", person.DateOfBirth.Value.ToShortDateString())
+                ("@dob", person.DateOfBirth.Value.ToString())
             };
             ExecuteSql(sql, parameters);
+
         }
 
 
@@ -155,6 +157,7 @@ namespace FamilyTreeEmil
             return null;
         }
 
+
         private Person GetPerson(DataRow row)
         {
             var person = new Person()
@@ -166,12 +169,12 @@ namespace FamilyTreeEmil
 
             if ((row["date_of_birth"] is DBNull) == false)
             {
-                person.DateOfBirth = (DateTime)row["date_of_birth"];
+                person.DateOfBirth = (int)row["date_of_birth"];
             }
 
             if ((row["date_of_death"] is DBNull) == false)
             {
-                person.DateOfDeath = (DateTime)row["date_of_death"];
+                person.DateOfDeath = (int)row["date_of_death"];
             }
 
             if ((row["mother_id"] is DBNull) == false)
@@ -203,7 +206,7 @@ namespace FamilyTreeEmil
             string dob;
             if (person.DateOfBirth.HasValue)
             {
-                dob = person.DateOfBirth.Value.ToShortDateString();
+                dob = person.DateOfBirth.Value.ToString();
             }
             else
             {
@@ -213,7 +216,7 @@ namespace FamilyTreeEmil
             string dod;
             if (person.DateOfDeath.HasValue)
             {
-                dod = person.DateOfDeath.Value.ToShortDateString();
+                dod = person.DateOfDeath.Value.ToString();
             }
             else
             {

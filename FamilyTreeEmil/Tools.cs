@@ -20,6 +20,12 @@ namespace FamilyTreeEmil
             Console.WriteLine(input);
             Console.ResetColor();
         }
+        public static void BlueTextWr(string input)
+        {
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine(input);
+            Console.ResetColor();
+        }
 
         public static void GreenTextWl(string input)
         {
